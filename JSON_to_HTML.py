@@ -16,12 +16,7 @@ class JsonToHtml:
     def _parse(self):
         for elem in self.data:
             for key, value in elem.items():
-                if key == 'title':
-                    self.row = "{0}<h1>{1}</h1>".format(self.row, value)
-
-                elif key == 'body':
-                    self.row = "{row}<p>{value}</p>".format(row=self.row, value=value)
-        return self.row
+                self.row = "{row}<{tag}>{value}</{tag}>".format(row=self.row, tag=key, value=value)
 
     def _save_html(self):
         f = open("index.html", "w")
