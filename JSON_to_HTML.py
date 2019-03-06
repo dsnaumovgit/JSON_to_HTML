@@ -13,10 +13,14 @@ class JsonToHtml:
         self.data = json.load(f)
         f.close()
 
-    def _parse(self):
-        for elem in self.data:
-            for key, value in elem.items():
-                self.row = "{row}<{tag}>{value}</{tag}>".format(row=self.row, tag=key, value=value)
+    def _parse(self, arg=None):
+        arg = arg or self.data
+        if isinstance(arg, list):
+            return "<ul>{}</ul>".format("".join(["<li>{}</li>".format(self._parse(x)) for x in self.data]))
+        result = ""
+        for key, value in arg.items():
+            result = "{result}<{tag}>{value}</{tag}>".format(result=result, tag=key, value=value)
+        return result
 
     def _save_html(self):
         f = open("index.html", "w")
@@ -25,7 +29,7 @@ class JsonToHtml:
 
     def convert(self):
         self._load_json()
-        self._parse()
+        self.row = self._parse()
         self._save_html()
 
 

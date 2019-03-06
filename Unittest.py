@@ -10,15 +10,14 @@ class TestJsonToHtml(unittest.TestCase):
             {"title": "3456", "body": "text676"},
             {"title": "tITLE", "body": "TEXT"}
         ]
-        jth._parse()
-        self.assertEqual(jth.row,
-                         "<title>some text</title><title>some text</title><body>description</body><title>3456</title>"
-                         "<body>text676</body><title>tITLE</title><body>TEXT</body>")
+        self.assertEqual(jth._parse(),
+                         "<ul><li><title>some text</title><body>description</body></li><li><title>3456</title>"
+                         "<body>text676</body></li><li><title>tITLE</title><body>TEXT</body></li></ul>")
 
     def test_non_parse(self):
         jth.data = [
             {"title": "some text"},
-            ["TEXT"]
+            {"TEXT"}
         ]
         with self.assertRaises(AttributeError):
             jth._parse()
