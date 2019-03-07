@@ -1,3 +1,4 @@
+import re
 import json
 
 
@@ -14,15 +15,40 @@ class JsonToHtml:
         self.data = json.load(f)
         f.close()
 
+    def _parse_tag(self, arg, **kwargs):
+        # find to the point (tag name)
+        tag = re.match('\w+', arg).group(0)
+        if kwargs['where'] == 'end':
+            return tag
+
+        # find to the end of the line or '#' (class name)
+        regex = re.compile('(?<=%s\.)[^#]+'%tag)
+        class_find = re.findall(regex, arg)
+        class_value = ""
+        if len(class_find) > 0:
+            class_replace = class_find[0].replace('.', ' ')
+            class_value = ' class="{}"'.format(class_replace)
+
+        # find id if it is
+        id_value = re.findall('(?<=#).+', arg)
+        id_str = ""
+        if id_value:
+            id_str = ' id="{id}"'.format(id=id_value[0])
+
+        return '{tag}{id}{class_value}'.format(tag=tag, id=id_str, class_value=class_value)
+
     # parse list by element
-    def _parse_list(self, arg):
-        return "<ul>{}</ul>".format("".join(["<li>{}</li>".format(self._parse(x)) for x in arg]))
+    # def _parse_list(self, arg):
+    #     return "<ul>{}</ul>".format("".join(["<li>{}</li>".format(self._parse(x)) for x in arg]))
 
     # parse dict by element
     def _parse_dict(self, arg):
         result = ""
         for key, value in arg.items():
-            result = "{result}<{tag}>{value}</{tag}>".format(result=result, tag=key, value=self._parse(value))
+            result = "{result}<{tag_start}>{value}</{tag_end}>".format(result=result,
+                                                                       tag_start=self._parse_tag(key, where='start'),
+                                                                       tag_end=self._parse_tag(key, where='end'),
+                                                                       value=self._parse(value))
         return result
 
     def _parse(self, arg=None):
@@ -35,13 +61,12 @@ class JsonToHtml:
         """
 
         arg = arg or self.data
-        if isinstance(arg, list):
-            return self._parse_list(arg)
-
-        elif isinstance(arg, dict):
+        if isinstance(arg, dict):
             return self._parse_dict(arg)
 
         else:
+            if ("<" and ">") in arg:
+                arg = arg.replace("<", "&lt;").replace(">", "&gt;")
             return arg
 
     # save to html file
